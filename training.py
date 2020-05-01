@@ -147,7 +147,8 @@ class Trainer:
 			test_intent_loss = 0
 			num_examples = 0
 			self.model.eval()
-			self.model.cpu(); self.model.is_cuda = False # beam search is memory-intensive; do on CPU for now
+			#if self.model.is_cuda:
+			#	self.model.cpu() # beam search is memory-intensive; do on CPU for now
 			for idx, batch in enumerate(dataset.loader):
 				x,y_intent = batch
 				batch_size = len(x)
@@ -163,7 +164,8 @@ class Trainer:
 					print("acc: " + str((guess_strings == truth_strings).mean()))
 					print("guess: " + guess_strings[0])
 					print("truth: " + truth_strings[0])
-			self.model.cuda(); self.model.is_cuda = True
+			#if self.model.is_cuda:
+			#	self.model.cuda()
 			test_intent_loss /= num_examples
 			test_intent_acc /= num_examples
 			results = {"intent_loss" : test_intent_loss, "intent_acc" : test_intent_acc, "set": "valid"}

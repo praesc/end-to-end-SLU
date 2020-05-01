@@ -2,7 +2,7 @@ import torch
 import torch.utils.data
 import torchaudio
 import os, glob
-from collections import Counter
+from collections import Counter, OrderedDict
 import soundfile as sf
 import numpy as np
 import configparser
@@ -11,6 +11,10 @@ import multiprocessing
 import json
 import pandas as pd
 from subprocess import call
+
+class OrderedCounter(Counter, OrderedDict):
+	pass
+
 
 class Config:
 	def __init__(self):
@@ -161,8 +165,8 @@ def get_SLU_datasets(config):
 			selected_speakers = speakers[:selected_speaker_count]
 			synthetic_train_df = synthetic_train_df[synthetic_train_df["speakerId"].isin(selected_speakers)]
 	else:
-		if "speakerId" in list(real_train_df): real_train_df = real_train_df.drop(columns="speakerId")
-		if "speakerId" in list(synthetic_train_df): synthetic_train_df = synthetic_train_df.drop(columns="speakerId")
+		if "speakerId" in list(real_train_df): real_train_df = real_train_df.drop("speakerId", axis=1)
+		if "speakerId" in list(synthetic_train_df): synthetic_train_df = synthetic_train_df.drop("speakerId", axis=1)
 		if config.real_speaker_subset_percentage < 1:
 			print("no speaker id listed in dataset .csv; ignoring speaker subset selection")
 		if config.synthetic_speaker_subset_percentage < 1:
@@ -172,12 +176,13 @@ def get_SLU_datasets(config):
 	if config.real_dataset_subset_percentage < 1:
 		subset_size = round(config.real_dataset_subset_percentage * len(real_train_df))
 		real_train_df = real_train_df.loc[np.random.choice(len(real_train_df), subset_size, replace=False)]
+		#print(real_train_df)
 		#real_train_df = real_train_df.set_index(np.arange(len(real_train_df)))
 	if config.synthetic_dataset_subset_percentage < 1:
 		subset_size = round(config.synthetic_dataset_subset_percentage * len(synthetic_train_df))
 		synthetic_train_df = synthetic_train_df.loc[np.random.choice(len(synthetic_train_df), subset_size, replace=False)]
 		#synthetic_train_df = synthetic_train_df.set_index(np.arange(len(synthetic_train_df)))
-
+		#print(synthetic_train_df)
 	train_df = pd.concat([synthetic_train_df, real_train_df]).reset_index()
 	if not config.seq2seq:
 		valid_df = pd.read_csv(os.path.join(base_path, "data", "valid_data.csv"))
@@ -188,16 +193,22 @@ def get_SLU_datasets(config):
 
 	if not config.seq2seq:
 		# Get list of slots
-		Sy_intent = {"action": {}, "object": {}, "location": {}}
+		Sy_intent = OrderedDict()
+		Sy_intent["action"] = OrderedDict()
+		Sy_intent["number"] = OrderedDict()
+		Sy_intent["object"] = OrderedDict()
+		Sy_intent["location"] = OrderedDict()
 
 		values_per_slot = []
-		for slot in ["action", "object", "location"]:
-			slot_values = Counter(train_df[slot])
+		for slot in ["action", "number", "object", "location"]:
+			slot_values = OrderedCounter(train_df[slot])
+			print(slot_values)
 			for idx,value in enumerate(slot_values):
 				Sy_intent[slot][value] = idx
 			values_per_slot.append(len(slot_values))
 		config.values_per_slot = values_per_slot
 		config.Sy_intent = Sy_intent
+		print("\n")
 	else: #seq2seq
 		import string
 		all_chars = "".join(train_df.loc[i]["semantics"] for i in range(len(train_df))) + string.printable # all printable chars; TODO: unicode?
@@ -317,7 +328,7 @@ class SLUDataset(torch.utils.data.Dataset):
 
 		if not self.seq2seq:
 			y_intent = [] 
-			for slot in ["action", "object", "location"]:
+			for slot in ["action", "number", "object", "location"]:
 				value = self.df.loc[idx][slot]
 				y_intent.append(self.Sy_intent[slot][value])
 		else:

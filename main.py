@@ -9,11 +9,13 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--pretrain', action='store_true', help='run ASR pre-training')
 parser.add_argument('--train', action='store_true', help='run SLU training')
+parser.add_argument('--test', action='store_true', help='run SLU test')
 parser.add_argument('--restart', action='store_true', help='load checkpoint from a previous run')
 parser.add_argument('--config_path', type=str, help='path to config file with hyperparameters, etc.')
 args = parser.parse_args()
 pretrain = args.pretrain
 train = args.train
+test = args.test
 restart = args.restart
 config_path = args.config_path
 
@@ -67,3 +69,19 @@ if train:
 	test_intent_acc, test_intent_loss = trainer.test(test_dataset)
 	print("========= Test results =========")
 	print("*intents*| test accuracy: %.2f| test loss: %.2f| valid accuracy: %.2f| valid loss: %.2f\n" % (test_intent_acc, test_intent_loss, valid_intent_acc, valid_intent_loss) )
+
+if test:
+	# Generate datasets
+	train_dataset, valid_dataset, test_dataset = get_SLU_datasets(config)
+
+	# Initialize final model
+	model = Model(config=config)
+
+	# Train the final model
+	trainer = Trainer(model=model, config=config)
+	trainer.load_checkpoint()
+	
+	# Test the model
+	test_intent_acc, test_intent_loss = trainer.test(test_dataset)
+	print("========= Test results =========")
+	print("*intents*| test accuracy: %.2f| test loss: %.2f\n" % (test_intent_acc, test_intent_loss) )

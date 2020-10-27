@@ -804,10 +804,13 @@ class Model(torch.nn.Module):
         x : Tensor of shape (batch size, T)
         y_intent : LongTensor of shape (batch size, num_slots)
         """
+        #y_inten = np.array([[1,1,1,1], [1,1,1,1]])
+        #y_intent = torch.from_numpy(y_inten)
+        #print(x.size())
         if self.is_cuda:
             y_intent = y_intent.cuda()
         out = self.pretrained_model.compute_features(x)
-        
+
         if not self.seq2seq:
             for layer in self.intent_layers:
                 out = layer(out)
@@ -826,7 +829,7 @@ class Model(torch.nn.Module):
             intent_acc = (predicted_intent == y_intent).prod(1).float().mean() # all slots must be correct
             for idx, intent in enumerate(predicted_intent):
                 if not np.array_equal(intent.cpu().numpy(), y_intent[idx].cpu().numpy()):
-                #print(self.get_intent_label(intent.cpu().numpy()), self.get_intent_label(y_intent[idx].cpu().numpy()))
+                    #print(self.get_intent_label(intent.cpu().numpy()), self.get_intent_label(y_intent[idx].cpu().numpy()))
                     pass
             return intent_loss, intent_acc
 

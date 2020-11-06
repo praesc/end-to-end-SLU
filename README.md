@@ -46,7 +46,7 @@ The ```test.wav``` file included with this repo has a recording of me saying "He
 
 This code has been added into infer.py. To run this script, execute it as follows:
 ```
-python3 infer.py --model myExperiments/all_real_all_synth_fp/experiment.cfg --file /PATH/TO/FILE.wav
+python3 infer.py --model myExperiments/all_real_all_synth_fp --file /PATH/TO/FILE.wav
 ```
 
 

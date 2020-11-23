@@ -6,8 +6,11 @@ If you have any questions about this code or have problems getting it to work, p
 ## Dependencies
 PyTorch, torchaudio, numpy, soundfile, pandas, tqdm, textgrid.py
 
+## Datasets
+Download or copy you dataset into this repository.
+
 ## Training
-First, change the ```asr_path``` and/or ```slu_path``` in the config file (like ```experiments/no_unfreezing.cfg```, or whichever experiment you want to run) to point to where the LibriSpeech data and/or Fluent Speech Commands data are stored on your computer.
+First, change the ```asr_path``` and/or ```slu_path``` in the config file (like ```experiments/no_unfreezing.cfg```, or whichever experiment you want to run) to point to where the LibriSpeech data and/or you custom dataset is stored on your computer.
 
 _SLU training:_ To train the model on an SLU dataset, run the following command:
 ```
